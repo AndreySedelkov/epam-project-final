@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{sign.in.title}">Sign In</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+      .otp-grid {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      .otp-digit {
+        width: 44px;
+        height: 52px;
+        text-align: center;
+        font-size: 1.35rem;
+        font-weight: 600;
+        border: 1px solid #c7d6e3;
+        border-radius: 10px;
+        outline: none;
+      }
+      .otp-digit:focus {
+        border-color: #4a86b8;
+        box-shadow: 0 0 0 2px rgba(74, 134, 184, 0.2);
+      }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}" th:text="#{index.nav.brand}">Travel Agency</a>
+    </div>
+</nav>
+
+<div class="auth-shell">
+  <div class="auth-container auth-card">
+    <h2 class="text-center mb-4" th:text="#{sign.in.header}">Sign In</h2>
+    <div class="alert alert-info"
+         th:if="${param.codeSent}"
+         th:text="${message != null ? message : #messages.msg('auth.verify.codeSent')}">
+        Verification code sent.
+    </div>
+    <div class="alert alert-success"
+         th:if="${param.verified}"
+         th:text="#{auth.verify.success}">
+        Email confirmed. You can sign in now.
+    </div>
+    <div class="alert alert-danger"
+         th:if="${param.verifyError}"
+         th:text="${error != null ? error : #messages.msg('auth.verify.error')}">
+        Verification code is invalid or expired.
+    </div>
+    <div class="alert alert-danger"
+         th:if="${param.verifySendError}"
+         th:text="${error != null ? error : #messages.msg('auth.verify.sendError')}">
+        Failed to send verification code.
+    </div>
+    <div class="alert alert-warning"
+         th:if="${param.verifyRequired}"
+         th:text="#{auth.verify.required}">
+        Please confirm your email before signing in.
+    </div>
+    <div class="alert alert-danger"
+         th:if="${param.error}"
+         th:text="#{error.default.message}">
+        Invalid credentials
+    </div>
+
+    <form th:action="@{/auth/login}" method="post">
+        <input type="hidden"
+               th:if="${_csrf != null}"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"/>
+
+        <div class="mb-3">
+            <label for="username" class="form-label" th:text="#{username.label}">Username</label>
+            <input type="text" id="username" name="username" class="form-control"
+                   placeholder="Enter username" required/>
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label" th:text="#{password.label}">Password</label>
+            <input type="password" id="password" name="password" class="form-control"
+                   placeholder="Enter password" required/>
+        </div>
+
+        <button type="submit" class="btn-submit" th:text="#{button.submit}">Submit</button>
+    </form>
+
+    <div th:if="${@environment.getProperty('app.oauth2.enabled') == 'true' or telegramBotUsername != null}">
+        <div class="oauth-divider" th:text="#{auth.oauth.divider}">or continue with</div>
+        <div class="oauth-buttons">
+            <a class="btn-oauth btn-google"
+               th:if="${@environment.getProperty('app.oauth2.enabled') == 'true'}"
+               th:href="@{/oauth2/authorization/google}">Google</a>
+            <div class="telegram-login"
+                 th:if="${telegramBotUsername != null}">
+                <script async
+                        src="https://telegram.org/js/telegram-widget.js?22"
+                        th:attr="data-telegram-login=${telegramBotUsername}"
+                        data-size="large"
+                        data-onauth="onTelegramAuth(user)"
+                        data-request-access="write"></script>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-actions mt-3">
+        <a class="btn btn-link"
+           th:href="@{/auth/forgot-password}"
+           th:text="#{link.forgotPassword}">Forgot password?</a>
+        <a class="btn btn-register"
+           th:href="@{/auth/sign-up}"
+           th:text="#{button.register}">Register</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="verifyEmailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" th:text="#{auth.verify.modal.title}">Email verification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="verifyCodeForm" th:action="@{/auth/verify-email-code}" method="post">
+        <div class="modal-body">
+          <input type="hidden"
+                 th:if="${_csrf != null}"
+                 th:name="${_csrf.parameterName}"
+                 th:value="${_csrf.token}"/>
+
+          <input type="hidden"
+                 id="verificationUsername"
+                 name="username"
+                 th:value="${verificationUsername != null ? verificationUsername : ''}"
+                 required/>
+
+          <p class="text-center text-muted mb-3"
+             th:if="${verificationEmail != null}"
+             th:text="#{auth.verify.codeSentTo(${verificationEmail})}">
+            Verification code was sent to email: user@example.com
+          </p>
+
+          <div class="mb-3 text-center">
+            <label for="verificationCode" class="form-label" th:text="#{auth.verify.code}">Verification code</label>
+            <input type="hidden"
+                   id="verificationCode"
+                   name="code"
+                   pattern="[0-9]{6}"
+                   required/>
+            <div class="otp-grid" id="otpGrid">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit 1">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" aria-label="Digit 2">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" aria-label="Digit 3">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" aria-label="Digit 4">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" aria-label="Digit 5">
+              <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" aria-label="Digit 6">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit"
+                  class="btn btn-outline-secondary"
+                  formnovalidate
+                  th:formaction="@{/auth/send-verification-code}"
+                  th:text="#{auth.verify.send}">Send code</button>
+          <button type="submit" class="btn btn-primary" th:text="#{auth.verify.button}">Confirm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function shouldOpenVerificationModal() {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('verifyRequired') || params.has('verifyError')
+      || params.has('verifySendError') || params.has('codeSent');
+  }
+
+  if (shouldOpenVerificationModal()) {
+    const modalElement = document.getElementById('verifyEmailModal');
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    }
+  }
+
+  const otpInputs = Array.from(document.querySelectorAll('.otp-digit'));
+  const otpHidden = document.getElementById('verificationCode');
+  const verifyCodeForm = document.getElementById('verifyCodeForm');
+
+  function sanitizeOtp(value) {
+    return (value || '').replace(/\D/g, '').slice(0, 6);
+  }
+
+  function writeOtp(startIndex, rawValue) {
+    const digits = sanitizeOtp(rawValue).split('');
+    if (digits.length === 0) {
+      return;
+    }
+    let cursor = startIndex;
+    digits.forEach(d => {
+      if (cursor < otpInputs.length) {
+        otpInputs[cursor].value = d;
+        cursor += 1;
+      }
+    });
+    if (cursor < otpInputs.length) {
+      otpInputs[cursor].focus();
+    } else {
+      otpInputs[otpInputs.length - 1].focus();
+    }
+    syncOtpHidden();
+  }
+
+  function syncOtpHidden() {
+    otpHidden.value = otpInputs.map(input => input.value).join('');
+    otpHidden.setCustomValidity('');
+  }
+
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', (event) => {
+      const clean = sanitizeOtp(event.target.value);
+      if (clean.length > 1) {
+        writeOtp(index, clean);
+        return;
+      }
+      event.target.value = clean;
+      syncOtpHidden();
+      if (clean.length === 1 && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Backspace' && input.value === '' && index > 0) {
+        otpInputs[index - 1].focus();
+        otpInputs[index - 1].value = '';
+        syncOtpHidden();
+      }
+    });
+
+    input.addEventListener('paste', (event) => {
+      event.preventDefault();
+      writeOtp(index, event.clipboardData.getData('text'));
+    });
+  });
+
+  if (verifyCodeForm) {
+    verifyCodeForm.addEventListener('submit', (event) => {
+      const submitter = event.submitter;
+      if (submitter && submitter.formAction && submitter.formAction.includes('/auth/send-verification-code')) {
+        return;
+      }
+      syncOtpHidden();
+      if (!/^[0-9]{6}$/.test(otpHidden.value)) {
+        event.preventDefault();
+        otpHidden.setCustomValidity('Please enter all 6 digits.');
+        otpHidden.reportValidity();
+      }
+    });
+  }
+
+  const verifyModalElement = document.getElementById('verifyEmailModal');
+  if (verifyModalElement) {
+    verifyModalElement.addEventListener('shown.bs.modal', () => {
+      const firstEmpty = otpInputs.find(input => input.value === '');
+      (firstEmpty || otpInputs[0]).focus();
+    });
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      return parts.pop().split(';').shift();
+    }
+    return null;
+  }
+
+  function onTelegramAuth(user) {
+    const csrfToken = getCookie('XSRF-TOKEN');
+    fetch('/auth/telegram', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-XSRF-TOKEN': csrfToken || ''
+      },
+      body: JSON.stringify(user)
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error('Telegram auth failed');
+      }
+      return response.json();
+    }).then((data) => {
+      window.location.href = data.redirect || '/';
+    }).catch(() => {
+      window.location.href = '/auth/sign-in?error';
+    });
+  }
+</script>
+</body>
+</html>

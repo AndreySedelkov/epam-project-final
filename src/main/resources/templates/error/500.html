@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{error.500.title}">500</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        h1 { font-size: 48px; color: #c0392b; }
+
+    </style>
+</head>
+<body>
+<h1 th:text="#{error.500.title}">Internal Server Error</h1>
+<p th:text="#{error.500.message}">Something went wrong on the server.</p>
+<a href="/" th:text="#{error.default.backHome}">Back to Home</a>
+</body>
+</html>

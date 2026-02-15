@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{home.title}">Travel Agency</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        thead {
+            background-color: transparent !important;
+        }
+        thead th {
+            color: inherit;
+        }
+
+
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+    <div class="container">
+        <a class="navbar-brand fw-bold"
+           th:href="@{/(lang=${#locale.language})}"
+           th:text="#{home.nav.brand}">Travel Agency
+        </a>
+
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto align-items-center">
+
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-outline-primary me-2"
+                       th:href="@{/auth/sign-in}"
+                       th:text="#{button.signin}">
+                        Sign In
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="btn btn-primary me-3"
+                       th:href="@{/auth/sign-up}"
+                       th:text="#{button.signup}">
+                        Sign Up
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasRole('MANAGER')">
+                    <a class="btn btn-outline-secondary me-2"
+                       th:href="@{/manager(lang=${#locale.language})}"
+                       th:text="#{dashboard.nav.manager}">
+                        Manager Panel
+                    </a>
+                </li>
+
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <a class="btn btn-outline-secondary me-2"
+                       th:href="@{/admin(lang=${#locale.language})}"
+                       th:text="#{dashboard.nav.admin}">
+                        Admin Panel
+                    </a>
+                </li>
+
+
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="btn btn-outline-secondary me-2"
+                       th:href="@{/profile}"
+                       th:text="#{button.profile}">
+                        My Profile
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}"/>
+                        <button class="btn btn-outline-danger me-3"
+                                type="submit"
+                                th:text="#{button.logout}">
+                            Logout
+                        </button>
+                    </form>
+                </li>
+
+                <li class="nav-item dropdown">
+                    <button class="btn btn-outline-info dropdown-toggle"
+                            id="langDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            th:text="#{button.language}">
+                        Language
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end"
+                        aria-labelledby="langDropdown">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 lang-option"
+                               href="#" data-lang="en">
+                                <img class="lang-flag" src="https://flagcdn.com/24x18/gb.png" alt="EN">
+                                <span th:text="#{button.lang.en}">EN</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 lang-option"
+                               href="#" data-lang="uz">
+                                <img class="lang-flag" src="https://flagcdn.com/24x18/uz.png" alt="UZ">
+                                <span th:text="#{button.lang.uz}">UZ</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 lang-option"
+                               href="#" data-lang="ru">
+                                <img class="lang-flag" src="https://flagcdn.com/24x18/ru.png" alt="RU">
+                                <span th:text="#{button.lang.ru}">RU</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 lang-option"
+                               href="#" data-lang="ka">
+                                <img class="lang-flag" src="https://flagcdn.com/24x18/ge.png" alt="KA">
+                                <span th:text="#{button.lang.ka}">KA</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<header class="page-hero text-center container">
+    <div>
+        <h1 class="display-4 fw-bold mb-3" th:text="#{home.header}">Welcome to Our Travel Agency!</h1>
+        <p class="lead mb-4" th:text="#{home.description}">
+            Explore incredible journeys and start your adventure today.
+        </p>
+        <a class="btn btn-primary btn-lg" sec:authorize="isAuthenticated()"
+           th:href="@{/profile}" th:text="#{button.viewProfile}">View Profile</a>
+    </div>
+</header>
+
+<div class="container mb-4 section-card">
+    <h2 class="mb-3" th:text="#{voucher.filter.header}">Filter Vouchers</h2>
+
+    <form th:action="@{/(lang=${#locale.language})}"
+          th:object="${filter}"
+          method="get"
+          class="filter-grid">
+
+        <input type="hidden"
+               name="lang"
+               th:value="${#locale.language}"/>
+
+
+        <div class="filter-field">
+            <label for="tourType" class="form-label"
+                   th:text="#{voucher.filter.tourType}">Tour Type</label>
+            <select th:field="*{tourType}"
+                    class="form-select"
+                    id="tourType">
+                <option value="" th:text="#{voucher.filter.all}">All</option>
+                <option th:each="t : ${T(com.epam.finaltask.model.TourType).values()}"
+                        th:value="${t}"
+                        th:text="${#messages.msg('tourType.' + t)}">
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="transferType" class="form-label"
+                   th:text="#{voucher.filter.transferType}">Transfer Type</label>
+            <select th:field="*{transferType}"
+                    class="form-select"
+                    id="transferType">
+                <option value="" th:text="#{voucher.filter.all}">All</option>
+                <option th:each="tr : ${T(com.epam.finaltask.model.TransferType).values()}"
+                        th:value="${tr}"
+                        th:text="${#messages.msg('transferType.' + tr)}">
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="hotelType" class="form-label"
+                   th:text="#{voucher.filter.hotelType}">Hotel Type</label>
+            <select th:field="*{hotelType}"
+                    class="form-select"
+                    id="hotelType">
+                <option value="" th:text="#{voucher.filter.all}">All</option>
+                <option th:each="h : ${T(com.epam.finaltask.model.HotelType).values()}"
+                        th:value="${h}"
+                        th:text="${#messages.msg('hotelType.' + h)}">
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="minPrice" class="form-label"
+                   th:text="#{voucher.filter.minPrice}">Min Price</label>
+            <input th:field="*{minPrice}"
+                   type="number" step="0.01"
+                   class="form-control"
+                   id="minPrice"/>
+        </div>
+
+        <div class="filter-field">
+            <label for="maxPrice" class="form-label"
+                   th:text="#{voucher.filter.maxPrice}">Max Price</label>
+            <input th:field="*{maxPrice}"
+                   type="number" step="0.01"
+                   class="form-control"
+                   id="maxPrice"/>
+        </div>
+
+        <div class="filter-field filter-action">
+            <button type="submit" class="btn btn-primary w-100"
+                    th:text="#{voucher.filter.button}">
+                Filter
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="container mb-5">
+    <h2 class="text-center mb-4" th:text="#{voucher.catalog.header}">
+        Available Vouchers
+    </h2>
+
+    <div class="row row-cols-1 row-cols-md-2 g-4 align-items-stretch mb-4"
+         id="voucherGrid"
+         th:if="${pagedVouchers.content != null and !#lists.isEmpty(pagedVouchers.content)}">
+
+        <div class="col" th:each="voucher, iterStat : ${pagedVouchers.content}">
+            <div class="card expandable-card shadow-sm h-100"
+                 th:id="'card-' + ${voucher.id}"
+                 th:style="|--i:${iterStat.index}|">
+                <div th:if="${voucher.imageUrl != null and !#strings.isEmpty(voucher.imageUrl)}">
+                    <img class="card-img-top"
+                         th:src="${voucher.imageUrl}"
+                         th:alt="${voucher.title}">
+                </div>
+                <div th:if="${voucher.imageUrl == null or #strings.isEmpty(voucher.imageUrl)}"
+                     th:switch="${voucher.title}">
+                    <img class="card-img-top img-paris" th:case="'Paris Escape'"
+                         src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Paris Escape">
+                    <img class="card-img-top img-tokyo" th:case="'Tokyo Discovery'"
+                         src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Tokyo Discovery">
+                    <img class="card-img-top img-safari" th:case="'African Safari'"
+                         src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="African Safari">
+                    <img class="card-img-top img-eco" th:case="'Eco Adventure'"
+                         src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Eco Adventure">
+                    <img class="card-img-top img-retreat" th:case="'Health Retreat'"
+                         src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Health Retreat">
+                    <img class="card-img-top img-sports" th:case="'Sports Challenge'"
+                         src="https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Sports Challenge">
+                    <img class="card-img-top img-leisure" th:case="'Leisure Escape'"
+                         src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Leisure Escape">
+                    <img class="card-img-top img-wild" th:case="'Wild Safari'"
+                         src="https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Wild Safari">
+                    <img class="card-img-top img-wine" th:case="'Wine Tasting Journey'"
+                         src="https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Wine Tasting Journey">
+                    <img class="card-img-top img-trek" th:case="'Eco Nature Trek'"
+                         src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Eco Nature Trek">
+                    <img class="card-img-top img-adventure" th:case="'Adventure Expedition'"
+                         src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Adventure Expedition">
+                    <img class="card-img-top img-cultural" th:case="'Cultural Odyssey'"
+                         src="https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Cultural Odyssey">
+                    <img class="card-img-top" th:case="*"
+                         src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&h=675&crop=entropy&q=80"
+                         alt="Travel voucher">
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span th:text="${voucher.title}">Voucher Title</span>
+                        <span th:if="${voucher.hot}"
+                              class="badge bg-danger ms-2 badge-hot"
+                              th:text="#{voucher.hot.badge}">HOT</span>
+                    </h5>
+                    <p class="card-text"
+                       th:text="${voucher.description}">Brief description...</p>
+                    <p class="card-text">
+                        <strong th:text="${#numbers.formatDecimal(voucher.price,1,'POINT',2,'COMMA')}">
+                            0.00
+                        </strong> USD
+                    </p>
+
+                    <div class="collapse mt-3"
+                         th:attr="id=|collapse-${voucher.id}|"
+                         data-bs-parent="#voucherGrid">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4" th:text="#{voucher.arrival}">Arrival:</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#temporals.format(voucher.arrivalDate,'dd.MM.yyyy')}">
+                                01.07.2025
+                            </dd>
+
+                            <dt class="col-sm-4" th:text="#{voucher.eviction}">Eviction:</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#temporals.format(voucher.evictionDate,'dd.MM.yyyy')}">
+                                07.07.2025
+                            </dd>
+
+                            <dt class="col-sm-4" th:text="#{voucher.filter.tourType}">Tour Type:</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#messages.msg('tourType.' + voucher.tourType)}">Health
+                            </dd>
+
+                            <dt class="col-sm-4" th:text="#{voucher.filter.transferType}">Transfer Type:</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#messages.msg('transferType.' + voucher.transferType)}">Bus
+                            </dd>
+
+                            <dt class="col-sm-4" th:text="#{voucher.filter.hotelType}">Hotel Type:</dt>
+                            <dd class="col-sm-8"
+                                th:text="${#messages.msg('hotelType.' + voucher.hotelType)}">Three Stars
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm btn-review"
+                                data-bs-toggle="collapse"
+                                th:attr="data-bs-target=|#collapse-${voucher.id}|"
+                                th:attrappend="aria-controls=|collapse-${voucher.id}|"
+                                aria-expanded="false"
+                                th:text="#{button.view}">Review
+                        </button>
+
+                        <a class="btn btn-success btn-sm"
+                           sec:authorize="!isAuthenticated()"
+                           th:href="@{/auth/sign-in}"
+                           th:text="#{button.order}">Order</a>
+
+                        <div sec:authorize="isAuthenticated()">
+                            <div th:if="${voucher.available}">
+                                <form th:action="@{/vouchers/order}"
+                                      method="post"
+                                      class="d-inline">
+                                    <input type="hidden" name="voucherId"
+                                           th:value="${voucher.id}"/>
+                                    <input type="hidden"
+                                           th:name="${_csrf.parameterName}"
+                                           th:value="${_csrf.token}"/>
+                                    <button type="submit"
+                                            class="btn btn-success btn-sm"
+                                            th:text="#{button.order}">Order
+                                    </button>
+                                </form>
+                            </div>
+                            <div th:if="${!voucher.available}">
+                                <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        disabled
+                                        th:text="#{button.notAvailable}">Not Available
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${pagedVouchers.content == null or #lists.isEmpty(pagedVouchers.content)}"
+         class="text-center">
+        <p th:text="#{voucher.catalog.empty}">
+            No vouchers available at the moment.
+        </p>
+    </div>
+
+    <nav th:if="${pagedVouchers.totalPages > 1}"
+         aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item"
+                th:classappend="${pagedVouchers.page == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{'/'(lang=${lang}, page=${pagedVouchers.page - 1}, size=${pagedVouchers.size})}">
+                    &laquo; Prev
+                </a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, pagedVouchers.totalPages - 1)}"
+                th:classappend="${i} == ${pagedVouchers.page} ? ' active'">
+                <a class="page-link"
+                   th:href="@{'/'(lang=${lang}, page=${i}, size=${pagedVouchers.size})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item"
+                th:classappend="${pagedVouchers.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{'/'(lang=${lang}, page=${pagedVouchers.page + 1}, size=${pagedVouchers.size})}">
+                    Next &raquo;
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+<style>
+  .expandable-card {
+    transition: transform .2s ease, z-index .2s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: card-rise 0.5s ease both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+    scroll-margin-bottom: 20px;
+  }
+  .expandable-card .card-body {
+    flex: 1 1 auto;
+  }
+  .expandable-card.active {
+    position: relative;
+    z-index: 1050;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 126, 95, 0.6);
+    background: #fff6f2;
+  }
+
+  @keyframes card-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.querySelectorAll('.btn-review').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const card = this.closest('.expandable-card');
+      const wasActive = card.classList.contains('active');
+      document.querySelectorAll('.expandable-card.active').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#voucherGrid .collapse.show').forEach(panel => {
+        const instance = bootstrap.Collapse.getInstance(panel);
+        if (instance) instance.hide();
+      });
+      if (!wasActive) {
+        card.classList.add('active');
+        setTimeout(() => {
+          const rect = card.getBoundingClientRect();
+          const gap = 40;
+          const target = rect.bottom + window.pageYOffset - window.innerHeight + gap;
+          const clamped = Math.max(0, target);
+          window.scrollTo({ top: clamped, behavior: 'smooth' });
+        }, 180);
+      }
+    });
+  });
+
+  document.querySelectorAll('.lang-option').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      const lang = link.dataset.lang;
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', lang);
+      window.location.href = url.toString();
+    });
+  });
+
+</script>

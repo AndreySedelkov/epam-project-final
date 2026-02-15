@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{error.401.title}">401</title>
+    <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    h1 { font-size: 48px; color: #c0392b; }
+  </style>
+</head>
+<body>
+<h1 th:text="#{error.401.title}">Unauthorized</h1>
+<p th:text="#{error.401.message}">
+    You must be authenticated to access this page.
+</p>
+<a th:href="@{/auth/sign-in(lang=${#locale.language})}"
+   th:text="#{error.401.backLogin}">
+    Go to Login
+</a>
+</body>
+</html>

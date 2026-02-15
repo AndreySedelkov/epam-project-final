@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{error.400.title}">400</title>
+    <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    h1 { font-size: 48px; color: #e67e22; }
+  </style>
+</head>
+<body>
+<h1 th:text="#{error.400.title}">Bad Request</h1>
+<p th:text="#{error.400.message}">
+    The server could not understand your request.
+</p>
+<a th:href="@{/(lang=${#locale.language})}"
+   th:text="#{error.default.backHome}">
+    Back to Home
+</a>
+</body>
+</html>
